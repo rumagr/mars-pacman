@@ -1,0 +1,5 @@
+﻿Name;ReleaseTick;StartX;StartY;ScatterCellX;ScatterCellY;HouseCellX;HouseCellY
+Blinky;0;14;20;27;30;14;17
+Pinky;4;14;18;2;30;14;17
+Inky;4;12;18;19;20;14;17
+Clyde;4;16;18;10;20;14;17

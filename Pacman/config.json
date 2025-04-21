@@ -1,0 +1,34 @@
+{
+  "globals": {
+    "steps": 2000,
+    "output": "csv"
+  },
+  "layers": [
+    {
+      "name": "MazeLayer",
+      "file": "Resources/grid.csv",
+      "mapping": [
+        {
+          "parameter": "Visualization",
+          "value": true
+        },
+        {
+          "parameter": "VisualizationTimeout",
+          "value": 180
+        }
+      ]
+    }
+  ],
+  "agents": [
+    {
+      "name": "PacManAgent",
+      "count": 1,
+      "file": "Resources/pacman_agent.csv"
+    },
+    {
+      "name": "GhostAgent",
+      "count": 4,
+      "file": "Resources/ghost_agent.csv"
+    }
+  ]
+}
