@@ -88,3 +88,7 @@ For more details on configuration, refer to the [MARS documentation](https://mar
    ```bash
    pip install -r requirements.txt
    python main.py
+Note for macOS users: You may need to use pip3 and python3 instead:
+   ```bash
+   pip3 install -r requirements.txt
+   python3 main.py
