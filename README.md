@@ -20,6 +20,12 @@ This simulation includes the following main agent and layer types:
 
 - **PacManAgent**: The main agent controlled by logic defined in its `Tick()` method. It can collect pellets, power pellets, and eat ghosts if powered up. The behavior is customizable by adjusting the logic inside `Tick()`.
 - **GhostAgent**: Enemies that alternate between chasing and scattering, with specific AI behaviors based on their type (Blinky, Pinky, Inky, Clyde). Ghosts can be eaten only if Pac-Man is powered up.
+Each **GhostAgent** has a behavior mode that determines its current strategy. You can check the mode of a ghost using its `Mode` property. The possible modes are:
+
+  - `Chase`: The ghost actively pursues Pac-Man.
+  - `Scatter`: The ghost moves to a predefined area on the map and wanders there.
+  - `Frightened`: The ghost is vulnerable and can be eaten by Pac-Man (after he eats a power pellet).
+  - `Eaten`: The ghost has been eaten and is returning to its home tile to regenerate.
 - **Pellet & PowerPellet**: Consumable items that increase the score. Power pellets grant Pac-Man the temporary ability to eat ghosts.
 
 ### Layers
@@ -31,10 +37,13 @@ This simulation includes the following main agent and layer types:
 
 Pac-Man's behavior is defined in the `Tick()` method of `PacManAgent.cs`. This method can be customized to test different strategies. You can control Pac-Man’s decisions using the following helper methods:
 
-- `ExploreGhosts()` – Returns positions of nearby ghosts.
-- `ExplorePellets()` – Returns positions of nearby pellets.
-- `ExplorePowerPellets()` – Returns positions of nearby power pellets.
+- `ExploreGhosts()` – Returns a list of ghost agents near Pac-Man.
+- `ExploreGhostPositions()` – Returns positions of nearby ghosts.
+- `ExplorePelletPositions()` – Returns positions of nearby pellets.
+- `ExplorePowerPelletPositions()` – Returns positions of nearby power pellets.
 - `ExploreOccupiablePositions()` – Returns all valid positions Pac-Man can move to.
+- `GetDistance(Position target)` – Returns the Euclidean distance between Pac-Man and a given position.
+- `GetScore()` – Returns the current game score.
 
 To move Pac-Man, use:
 
