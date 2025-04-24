@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Mars.Interfaces.Annotations;
 using Mars.Interfaces.Environments;
+using Mars.Numerics;
 
 namespace Pacman.Model;
 
@@ -17,18 +18,19 @@ public class PacManAgent : MovingAgent
 
     public override void Tick()
     {
-        var powerPellets = ExplorePowerPellets();
-        var pellets = ExplorePellets();
-        var ghosts = ExploreGhosts();
+        var powerPelletPositions = ExplorePowerPelletPositions();
+        var pelletPositions = ExplorePelletPositions();
+        // var ghostPositions = ExploreGhostPositions();
+        var ghostPositions = ExploreGhosts().Select(agent => agent.Position).ToList();
         var occupiablePositions = ExploreOccupiablePositions();
 
-        if (powerPellets.Count > 0) MoveTowardsGoal(powerPellets.First());
-        else if (pellets.Count > 0) MoveTowardsGoal(pellets.First());
-        else if (ghosts.Count > 0)
+        if (powerPelletPositions.Count > 0) MoveTowardsGoal(powerPelletPositions.First());
+        else if (pelletPositions.Count > 0) MoveTowardsGoal(pelletPositions.First());
+        else if (ghostPositions.Count > 0)
         {
-            var target = ghosts.First();
+            var target = ghostPositions.First();
             if (PoweredUp) MoveTowardsGoal(target);
-            else MoveTowardsGoal(occupiablePositions.FirstOrDefault(pos => !ghosts.Contains(pos)));
+            else MoveTowardsGoal(occupiablePositions.FirstOrDefault(pos => !ghostPositions.Contains(pos)));
         }
         else
         {
@@ -41,16 +43,24 @@ public class PacManAgent : MovingAgent
     /// Explores the environment and returns a list of positions of the ghosts.
     /// </summary>
     /// <returns></returns>
-    private List<Position> ExploreGhosts()
+    private List<Position> ExploreGhostPositions()
     {
         return Layer.GhostAgentEnvironment.Explore(Position, VisualRange, -1).Select(agent => agent.Position).ToList();
+    }
+
+    /// <summary>
+    /// Explores the environment and returns a list of GhostAgent instances.
+    /// </summary>
+    private List<GhostAgent> ExploreGhosts()
+    {
+        return Layer.GhostAgentEnvironment.Explore(Position, VisualRange, -1).ToList();
     }
     
     /// <summary>
     /// Explores the environment and returns a list of positions of the pellets.
     /// </summary>
     /// <returns></returns>
-    private List<Position> ExplorePellets()
+    private List<Position> ExplorePelletPositions()
     {
         return Layer.PelletEnvironment.Explore(Position, VisualRange, -1).Select(agent => agent.Position).ToList();
     }
@@ -59,7 +69,7 @@ public class PacManAgent : MovingAgent
     /// Explores the environment and returns a list of positions of the power pellets.
     /// </summary>
     /// <returns></returns>
-    private List<Position> ExplorePowerPellets()
+    private List<Position> ExplorePowerPelletPositions()
     {
         return Layer.PowerPelletEnvironment.Explore(Position, VisualRange, -1).Select(agent => agent.Position).ToList();
     }
@@ -70,6 +80,16 @@ public class PacManAgent : MovingAgent
     private List<Position> ExploreOccupiablePositions()
     {
         return Layer.OccupiableSpotsEnvironment.Explore(Position, VisualRange, -1).Select(agent => agent.Position).ToList();
+    }
+    
+    /// <summary>
+    /// Gets the distance between the PacManAgent and the target position.
+    /// </summary>
+    /// <param name="target"></param>
+    /// <returns></returns>
+    private double GetDistance(Position target)
+    {
+        return Distance.Euclidean(Position.X, Position.Y, target.X, target.Y);
     }
     
     private int GetScore() => 
