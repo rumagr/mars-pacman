@@ -248,7 +248,7 @@ public class MazeLayer : RasterLayer, ISteppedActiveLayer
                 Score += 200;
                 ghost.Mode = GhostMode.Eaten;
             }
-            else
+            else if (ghost.Mode != GhostMode.Eaten)
             {
                 PacManDie();
                 break;
