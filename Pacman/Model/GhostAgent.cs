@@ -38,10 +38,6 @@ public class GhostAgent : MovingAgent
         {
             Mode = Layer.GetCurrentTick() % 54 < 14 ? GhostMode.Scatter : GhostMode.Chase;
         }
-
-        if (Mode == GhostMode.Frightened && !IsPacmanPoweredUp()) Mode = GhostMode.Scatter;
-        
-        if (Mode == GhostMode.Eaten && Position.Equals(Position.CreatePosition(HouseCellX, HouseCellY))) Mode = GhostMode.Scatter;
         
         Position target;
 
@@ -70,7 +66,11 @@ public class GhostAgent : MovingAgent
         MoveTowardsGoal(target);
     }
 
-    private Position GetRandomCell()
+    /// <summary>
+    /// Selects a random, walkable cell from the ghost's surroundings.
+    /// </summary>
+    /// <returns></returns>
+    protected Position GetRandomCell()
     {
         var randomIndex = new Random().Next(Layer.OccupiableSpots.Count);
         return Layer.OccupiableSpots[randomIndex];
@@ -90,31 +90,6 @@ public class GhostAgent : MovingAgent
             target = new Position(target.X, target.Y - 1);
         return GetClosestOccupiablePosition(target);
     }
-    
-    // private Position GetInkyTarget()
-    // {
-    //     var pacman = Layer.PacManAgent;
-    //     var blinky = Layer.GhostAgents.FirstOrDefault(g => g.Name == "Blinky");
-    //
-    //     if (blinky.Mode == GhostMode.Eaten) return pacman.Position; 
-    //     
-    //     var target = pacman.Position;
-    //     if (pacman.Direction == Direction.Right)
-    //         target = new Position(target.X + 2, target.Y);
-    //     else if (pacman.Direction == Direction.Left)
-    //         target = new Position(target.X - 2, target.Y);
-    //     else if (pacman.Direction == Direction.Up)
-    //         target = new Position(target.X, target.Y + 2);
-    //     else if (pacman.Direction == Direction.Down)
-    //         target = new Position(target.X, target.Y - 2);
-    //     
-    //     var vectorX = target.X - blinky.Position.X;
-    //     var vectorY = target.Y - blinky.Position.Y;
-    //     
-    //     var finalTarget = new Position(blinky.Position.X + 2 * vectorX, blinky.Position.Y + 2 * vectorY);
-    //     
-    //     return GetClosestOccupiablePosition(finalTarget);
-    // }
     
     private Position GetInkyTarget()
     {
@@ -158,7 +133,7 @@ public class GhostAgent : MovingAgent
     private Position FindPacman() =>
         Layer.PacManAgentEnvironment.Explore(Position, -1, 1).First().Position;
 
-    private bool IsPacmanPoweredUp() =>
+    protected bool IsPacmanPoweredUp() =>
         Layer.PacManAgent.PoweredUp;
 
     private Position GetChaseTarget()
@@ -173,7 +148,7 @@ public class GhostAgent : MovingAgent
         };
     }
     
-    private Position GetClosestOccupiablePosition(Position target)
+    protected Position GetClosestOccupiablePosition(Position target)
     {
         return Layer.OccupiableSpots
             .OrderBy(spot => Math.Abs(spot.X - target.X) + Math.Abs(spot.Y - target.Y))
@@ -201,7 +176,4 @@ public class GhostAgent : MovingAgent
     
     [PropertyDescription]
     public int HouseCellY { get; set; }
-    
-    
-    
 }

@@ -1,9 +1,10 @@
 ﻿using System;
-using Mars.Components.Environments;
 using Mars.Interfaces.Agents;
 using Mars.Interfaces.Environments;
-using Mars.Interfaces.Layers;
 using Mars.Interfaces.Annotations;
+using Mars.Numerics;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Pacman.Model;
 
@@ -56,6 +57,42 @@ public abstract class MovingAgent : IAgent<MazeLayer>, IPositionable
         return HasMoved;
     }
     
+    /// <summary>
+    /// Gets the distance between the Agent and the target position.
+    /// </summary>
+    /// <param name="target"></param>
+    /// <returns></returns>
+    protected double GetDistance(Position target)
+    {
+        return Distance.Euclidean(Position.X, Position.Y, target.X, target.Y);
+    }
+    
+    /// <summary>
+    /// Explores the environment and returns a list of positions of the pellets.
+    /// </summary>
+    /// <returns></returns>
+    protected List<Position> ExplorePelletPositions()
+    {
+        return Layer.PelletEnvironment.Explore(Position, VisualRange, -1).Select(agent => agent.Position).ToList();
+    }
+    
+    /// <summary>
+    /// Explores the environment and returns a list of positions of the power pellets.
+    /// </summary>
+    /// <returns></returns>
+    protected List<Position> ExplorePowerPelletPositions()
+    {
+        return Layer.PowerPelletEnvironment.Explore(Position, VisualRange, -1).Select(agent => agent.Position).ToList();
+    }
+
+    /// <summary>
+    /// Explores the environment and returns a list of positions of the occupiable spots.
+    /// </summary>
+    protected List<Position> ExploreOccupiablePositions()
+    {
+        return Layer.OccupiableSpotsEnvironment.Explore(Position, VisualRange, -1).Select(agent => agent.Position).ToList();
+    }
+    
     public abstract void Tick();
     
     [PropertyDescription]
@@ -66,4 +103,7 @@ public abstract class MovingAgent : IAgent<MazeLayer>, IPositionable
     
     [PropertyDescription]
     public String Name { get; set; }
+    
+    [PropertyDescription]
+    public int VisualRange { get; set; }
 }

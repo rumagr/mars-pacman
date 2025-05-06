@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Mars.Interfaces.Annotations;
 using Mars.Interfaces.Environments;
-using Mars.Numerics;
 
 namespace Pacman.Model;
 
@@ -23,7 +22,6 @@ public class PacManAgent : MovingAgent
         // var ghostPositions = ExploreGhostPositions();
         var ghostPositions = ExploreGhosts().Select(agent => agent.Position).ToList();
         var occupiablePositions = ExploreOccupiablePositions();
-
         if (powerPelletPositions.Count > 0) MoveTowardsGoal(powerPelletPositions.First());
         else if (pelletPositions.Count > 0) MoveTowardsGoal(pelletPositions.First());
         else if (ghostPositions.Count > 0)
@@ -56,42 +54,6 @@ public class PacManAgent : MovingAgent
         return Layer.GhostAgentEnvironment.Explore(Position, VisualRange, -1).ToList();
     }
     
-    /// <summary>
-    /// Explores the environment and returns a list of positions of the pellets.
-    /// </summary>
-    /// <returns></returns>
-    private List<Position> ExplorePelletPositions()
-    {
-        return Layer.PelletEnvironment.Explore(Position, VisualRange, -1).Select(agent => agent.Position).ToList();
-    }
-    
-    /// <summary>
-    /// Explores the environment and returns a list of positions of the power pellets.
-    /// </summary>
-    /// <returns></returns>
-    private List<Position> ExplorePowerPelletPositions()
-    {
-        return Layer.PowerPelletEnvironment.Explore(Position, VisualRange, -1).Select(agent => agent.Position).ToList();
-    }
-
-    /// <summary>
-    /// Explores the environment and returns a list of positions of the occupiable spots.
-    /// </summary>
-    private List<Position> ExploreOccupiablePositions()
-    {
-        return Layer.OccupiableSpotsEnvironment.Explore(Position, VisualRange, -1).Select(agent => agent.Position).ToList();
-    }
-    
-    /// <summary>
-    /// Gets the distance between the PacManAgent and the target position.
-    /// </summary>
-    /// <param name="target"></param>
-    /// <returns></returns>
-    private double GetDistance(Position target)
-    {
-        return Distance.Euclidean(Position.X, Position.Y, target.X, target.Y);
-    }
-    
     private int GetScore() => 
         Layer.Score;
     
@@ -104,10 +66,5 @@ public class PacManAgent : MovingAgent
     public int PoweredUpTime { get; set; }
     
     [PropertyDescription]
-    public int VisualRange { get; set; }
-    
-    [PropertyDescription]
     public int Lives { get; set; }
-
-    
 }
