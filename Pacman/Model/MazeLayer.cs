@@ -39,7 +39,10 @@ public class MazeLayer : RasterLayer, ISteppedActiveLayer
         
         AgentManager = layerInitData.Container.Resolve<IAgentManager>();
 
-        GhostAgents = AgentManager.Spawn<GhostAgent, MazeLayer>().ToList();
+        GhostAgents = ValidateGhostConfiguration(layerInitData) ? 
+            AgentManager.Spawn<SmartGhostAgent, MazeLayer>().Cast<GhostAgent>().ToList() : 
+            AgentManager.Spawn<GhostAgent, MazeLayer>().ToList();
+        
         
         PacManAgent = AgentManager.Spawn<PacManAgent, MazeLayer>().ToList().First();
         PacManAgent.Direction = Direction.Right;
@@ -162,6 +165,10 @@ public class MazeLayer : RasterLayer, ISteppedActiveLayer
         foreach (var ghostAgent in GhostAgents)
         {
             ghostAgent.HasMoved = false;
+            if (ghostAgent.Mode == GhostMode.Frightened && !PacManAgent.PoweredUp) ghostAgent.Mode = GhostMode.Scatter;
+            if (ghostAgent.Mode == GhostMode.Eaten && ghostAgent.Position.Equals(
+                    Position.CreatePosition(ghostAgent.HouseCellX, ghostAgent.HouseCellY))) 
+                ghostAgent.Mode = GhostMode.Scatter;
         }
         
         if (Visualization)
@@ -254,6 +261,25 @@ public class MazeLayer : RasterLayer, ISteppedActiveLayer
                 break;
             }
         }
+    }
+    
+    private bool ValidateGhostConfiguration(LayerInitData layerInitData)
+    {
+        var ghostMapping = layerInitData.AgentInitConfigs.FirstOrDefault(m => m.ModelType.TypeName == "Pacman.Model.GhostAgent");
+        var smartGhostMapping = layerInitData.AgentInitConfigs.FirstOrDefault(m => m.ModelType.TypeName == "Pacman.Model.SmartGhostAgent");
+
+        if (ghostMapping is null)
+            throw new ArgumentException("GhostAgent is missing in the configuration.");
+        if (smartGhostMapping is null)
+            throw new ArgumentException("SmartGhostAgent is missing in the configuration.");
+
+        var smartGhosts = smartGhostMapping.InstanceCount == 4 && ghostMapping.InstanceCount == 0;
+
+        if (!smartGhosts && !(ghostMapping.InstanceCount == 4 && smartGhostMapping.InstanceCount == 0))
+            throw new ArgumentException(
+                $"Invalid agent configuration. Expected 4:0 or 0:4 setup, but found GhostAgent={ghostMapping.InstanceCount}, SmartGhostAgent={smartGhostMapping.InstanceCount}.");
+
+        return smartGhosts;
     }
     
     [PropertyDescription]

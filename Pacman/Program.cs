@@ -18,6 +18,7 @@ internal static class Program
         description.AddAgent<Pellet, MazeLayer>();
         description.AddAgent<PowerPellet, MazeLayer>();
         description.AddAgent<OccupiableSpot, MazeLayer>();
+        description.AddAgent<SmartGhostAgent, MazeLayer>();
 
         // Load the simulation configuration from a JSON configuration file
         var file = File.ReadAllText("config.json");

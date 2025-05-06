@@ -37,19 +37,62 @@ Each **GhostAgent** has a behavior mode that determines its current strategy. Yo
 
 Pac-Man's behavior is defined in the `Tick()` method of `PacManAgent.cs`. This method can be customized to test different strategies. You can control Pac-Man’s decisions using the following helper methods:
 
-- `ExploreGhosts()` – Returns a list of ghost agents near Pac-Man.
-- `ExploreGhostPositions()` – Returns positions of nearby ghosts.
-- `ExplorePelletPositions()` – Returns positions of nearby pellets.
-- `ExplorePowerPelletPositions()` – Returns positions of nearby power pellets.
-- `ExploreOccupiablePositions()` – Returns all valid positions Pac-Man can move to.
-- `GetDistance(Position target)` – Returns the Euclidean distance between Pac-Man and a given position.
-- `GetScore()` – Returns the current game score.
+| Method | Description |
+|--------|-------------|
+| `List<GhostAgent> ExploreGhosts()` | Returns a list of ghost agents near Pac-Man (within visual range). |
+| `List<Position> ExploreGhostPositions()` | Returns the positions of nearby ghosts. |
+| `List<Position> ExplorePelletPositions()` | Returns the positions of nearby pellets. |
+| `List<Position> ExplorePowerPelletPositions()` | Returns the positions of nearby power pellets. |
+| `List<Position> ExploreOccupiablePositions()` | Returns all valid and reachable positions Pac-Man can move to. |
+| `double GetDistance(Position target)` | Returns the Euclidean distance between Pac-Man and the target position. |
+| `int GetScore()` | Returns the current score of the game. |
 
 To move Pac-Man, use:
 
 - `MoveTowardsGoal(Position target)` – Moves Pac-Man **one field** toward the target. **Diagonal movement is supported**.
 
 An example logic for prioritizing power pellets, pellets, or running from ghosts is already implemented in the code.
+
+## SmartGhostAgent – Customizable Ghost Agent
+
+In addition to the classic **GhostAgent**, this project includes the **SmartGhostAgent**, a programmable variant designed for implementing custom AI behavior. Much like the `PacManAgent`, the `SmartGhostAgent` can be fully controlled via its `Tick()` method, allowing for dynamic and personalized logic. To ensure correct integration with the state and timing mechanisms, the first line of the `Tick()` method should remain `if (ProcessGhostState()) return;`. 
+
+To use `SmartGhostAgents` in the simulation, you must update the `config.json` file to control which agent type is active.  
+Only **one** of the two, `GhostAgent` or `SmartGhostAgent`, should have a `count` of `4`, while the other must be set to `0`.
+
+
+### Behavior and Characteristics
+- **Release Timer**: Every ghost, including the `SmartGhostAgent`, has a `ReleaseTick` attribute that defines at which simulation tick the agent is allowed to begin moving, either at game start or after Pac-Man loses a life.
+
+- **Scatter Mode**: While in Scatter mode, the `SmartGhostAgent` has full autonomy over its movement. Unlike classic ghosts, it is not bound to predefined corner targets.
+
+- **Frightened Mode**: When in the Frightened state, the ghost may move freely, but only on **every second tick**, mimicking the slowed behavior from the original game.
+
+- **Eaten Mode**: Once eaten by Pac-Man, the ghost automatically returns to its home tile just like any regular `GhostAgent`.
+
+- **Chase / Scatter Switching**: The `SmartGhostAgent` can switch between Chase and Scatter modes on its own, enabling more coordinated behavior with other ghosts.
+
+- **Limited Vision**: For balancing purposes, the `SmartGhostAgent` has a **smaller visual range** than Pac-Man and can only detect Pac-Man **within its current field of view**. Global tracking of Pac-Man is **not** possible.
+
+### Methods for Custom Logic
+
+The following methods are available to the `SmartGhostAgent` for implementing custom strategies:
+
+| Method | Description |
+|--------|-------------|
+| `PacManAgent? ExplorePacMan()` | Returns the visible `PacManAgent` instance, or `null` if Pac-Man is not in view. |
+| `List<GhostAgent> ExploreTeam()` | Returns a list of all teammates. |
+| `bool EnterChaseMode()` | Switches the ghost into Chase mode, if currently in Scatter mode. |
+| `bool EnterScatterMode()` | Switches the ghost into Scatter mode, if currently in Chase mode. |
+| `bool Frightened()` | Returns whether the ghost is currently in the Frightened state. |
+| `bool MoveTowardsGoal(Position target)` | Moves the ghost one step toward a target. |
+| `List<Position> ExploreOccupiablePositions()` | Returns all reachable positions within the ghost’s visual range. |
+| `double GetDistance(Position target)` | Returns the Euclidean distance to a given position. |
+| `Position GetRandomCell()` | Returns a random walkable cell from the map. |
+| `List<Position> ExplorePelletPositions()` | Returns positions of all visible pellets. |
+| `List<Position> ExplorePowerPelletPositions()` | Returns positions of all visible power pellets. |
+
+For game balance reasons, the `SmartGhostAgent` has a smaller visual range than Pac-Man, since the ghosts act in groups of four.
 
 ## Game Logic
 
@@ -82,7 +125,7 @@ For more details on configuration, refer to the [MARS documentation](https://mar
 ### Prerequisites
 
 - [.NET Core 8.0 or later](https://dotnet.microsoft.com/en-us/download)
-- [Python 3.8+](https://www.python.org/)
+- [Python 3.11](https://www.python.org/)
 - A C# IDE (e.g. [JetBrains Rider](https://www.jetbrains.com/rider/) recommended)
 
 ### Run Instructions
