@@ -31,13 +31,19 @@ public class PacManAgent : MovingAgent
             if (target != null)
             {
                 MoveTowardsGoal(target);
-                return;
             }
             else
             {
-                MoveTowardsGoal(nextPelletPosition);
-                return; 
-                //esse pallets 
+                if (nextPelletPosition != null) //esse pallets
+                {
+                    MoveTowardsGoal(nextPelletPosition);
+                }
+                else 
+                {
+                    var randomPosition = occupiablePositions[_random.Next(0, occupiablePositions.Count)];
+                    MoveTowardsGoal(randomPosition);
+                }
+                 
             }
         } 
         else
@@ -81,13 +87,30 @@ public class PacManAgent : MovingAgent
                     }
                 }
             }
+            else if (ghostPositions.Count >= 2 && powerPelletPositions.Count > 0) // wenn 2 oder mehr geister sichtbar sind und power pellet in der nähe, dann pp essen
+            {
+                MoveTowardsGoal(getNearestPowerPelletPosition(powerPelletPositions)); 
+            }
+            else if (pelletsEaten >= thresh && (powerPelletPositions.Count > 0)) // wenn counter > pelletthreshold, power pellets essen (closest)
+            {
+                
+                    MoveTowardsGoal(getNearestPowerPelletPosition(powerPelletPositions)); 
+            }
+            else // nähestes pellet essen
+            {
+                if (nextPelletPosition != null) //esse pallets
+                {
+                    MoveTowardsGoal(nextPelletPosition);
+                }
+                else 
+                {
+                    var randomPosition = occupiablePositions[_random.Next(0, occupiablePositions.Count)];
+                    MoveTowardsGoal(randomPosition);
+                }
+            }
             
-            // wenn 2 oder mehr geister sichtbar sind und power pellet in der nähe, dann pp essen
         
-            // wenn counter < pelletthreshold, normale pellets essen (closest)
-            MoveTowardsGoal(nextPelletPosition);
-            return; 
-            // nähestes powerpellet essen
+
                 
         }
    
@@ -95,19 +118,19 @@ public class PacManAgent : MovingAgent
         
         
         // Rule-based behaviour
-        if (powerPelletPositions.Count > 0) MoveTowardsGoal(powerPelletPositions.First());
-        else if (pelletPositions.Count > 0) MoveTowardsGoal(pelletPositions.First());
-        else if (ghostPositions.Count > 0)
-        {
-            var target = ghostPositions.First();
-            if (PoweredUp) MoveTowardsGoal(target);
-            else MoveTowardsGoal(occupiablePositions.FirstOrDefault(pos => !ghostPositions.Contains(pos)));
-        }
-        else
-        {
-            var randomPosition = occupiablePositions[_random.Next(0, occupiablePositions.Count)];
-            MoveTowardsGoal(randomPosition);
-        }
+        //if (powerPelletPositions.Count > 0) MoveTowardsGoal(powerPelletPositions.First());
+        //else if (pelletPositions.Count > 0) MoveTowardsGoal(pelletPositions.First());
+        //else if (ghostPositions.Count > 0)
+        //{
+        //    var target = ghostPositions.First();
+        //    if (PoweredUp) MoveTowardsGoal(target);
+        //    else MoveTowardsGoal(occupiablePositions.FirstOrDefault(pos => !ghostPositions.Contains(pos)));
+        //}
+        //else
+        //{
+        //    var randomPosition = occupiablePositions[_random.Next(0, occupiablePositions.Count)];
+        //    MoveTowardsGoal(randomPosition);
+        //}
     }
 
     
@@ -195,4 +218,8 @@ public class PacManAgent : MovingAgent
     
     [PropertyDescription]
     public int Lives { get; set; }
+    
+    private int pelletsEaten = 0;
+
+    private static int thresh = 15; 
 }
