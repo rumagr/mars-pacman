@@ -22,17 +22,32 @@ public class PacManAgent : MovingAgent
         // var ghostPositions = ExploreGhostPositions();
         var ghostPositions = ExploreGhosts().Select(agent => agent.Position).ToList();
         var occupiablePositions = ExploreOccupiablePositions();
-
+        
         if (PoweredUp)
         {
-            //MoveTowardsGoal( Näheste Geister Position )
-        } // ansonsten, wenn geist bestimmte distanz unterschreitet: fliehen Richtung Power Pellet, wenn es näher ist als Geist
+            var target = getNearestGhostPosition(ghostPositions);
+            if (target != null)
+            {
+                MoveTowardsGoal(target);
+                return;
+            }
+            else
+            {
+                //esse pallets 
+            }
+        } 
+        else
+        {
+            // ansonsten, wenn geist bestimmte distanz unterschreitet: fliehen Richtung Power Pellet, wenn es näher ist als Geist
+            
+            // wenn 2 oder mehr geister sichtbar sind und power pellet in der nähe, dann pp essen
         
-        // wenn 2 oder mehr geister sichtbar sind und power pellet in der nähe, dann pp essen
+            // wenn counter < pelletthreshold, normale pellets essen (closest)
         
-        // wenn counter < pelletthreshold, normale pellets essen (closest)
-        
-        // nähestes powerpellet essen
+            // nähestes powerpellet essen
+                
+        }
+   
         
         
         
@@ -52,6 +67,23 @@ public class PacManAgent : MovingAgent
         }
     }
 
+    private Position getNearestGhostPosition(List<Position> ghostPositions)
+    {
+        if (ghostPositions.Count > 0)
+        {
+            Position nearestGhostPosition = ghostPositions[0];
+            for (int i = 0; i < ghostPositions.Count; i++)
+            {
+                if (GetDistance(nearestGhostPosition) > GetDistance(ghostPositions[i]))
+                {
+                    nearestGhostPosition = ghostPositions[i];
+                }
+            }
+            return nearestGhostPosition;
+        }
+        return null; 
+    }
+    
     /// <summary>
     /// Explores the environment and returns a list of positions of the ghosts.
     /// </summary>
