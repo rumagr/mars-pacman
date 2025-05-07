@@ -22,6 +22,21 @@ public class PacManAgent : MovingAgent
         // var ghostPositions = ExploreGhostPositions();
         var ghostPositions = ExploreGhosts().Select(agent => agent.Position).ToList();
         var occupiablePositions = ExploreOccupiablePositions();
+
+        if (PoweredUp)
+        {
+            //MoveTowardsGoal( Näheste Geister Position )
+        } // ansonsten, wenn geist bestimmte distanz unterschreitet: fliehen Richtung Power Pellet, wenn es näher ist als Geist
+        
+        // wenn 2 oder mehr geister sichtbar sind und power pellet in der nähe, dann pp essen
+        
+        // wenn counter < pelletthreshold, normale pellets essen (closest)
+        
+        // nähestes powerpellet essen
+        
+        
+        
+        // Rule-based behaviour
         if (powerPelletPositions.Count > 0) MoveTowardsGoal(powerPelletPositions.First());
         else if (pelletPositions.Count > 0) MoveTowardsGoal(pelletPositions.First());
         else if (ghostPositions.Count > 0)
