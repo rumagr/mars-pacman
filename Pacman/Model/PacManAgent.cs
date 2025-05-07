@@ -22,8 +22,8 @@ public class PacManAgent : MovingAgent
         // var ghostPositions = ExploreGhostPositions();
         var ghostPositions = ExploreGhosts().Select(agent => agent.Position).ToList();
         var occupiablePositions = ExploreOccupiablePositions();
-
-        var nextPelletPosiotion = getNearestPelletPosition(pelletPositions); 
+        var dangerousGhosts = ExploreDangerousGhosts();
+        var nextPelletPosition = getNearestPelletPosition(pelletPositions); 
         
         if (PoweredUp)
         {
@@ -35,19 +35,57 @@ public class PacManAgent : MovingAgent
             }
             else
             {
-                MoveTowardsGoal(nextPelletPosiotion);
+                MoveTowardsGoal(nextPelletPosition);
                 return; 
                 //esse pallets 
             }
         } 
         else
         {
-            // ansonsten, wenn geist bestimmte distanz unterschreitet: fliehen Richtung Power Pellet, wenn es näher ist als Geist
+            if (dangerousGhosts.Count > 0) // ansonsten, wenn geist bestimmte distanz unterschreitet: fliehen Richtung Power Pellet, wenn es näher ist als Geist
+            {
+                var nearestPowerPelletPosition = getNearestPowerPelletPosition(powerPelletPositions);
+                var nearestGhostPosition = getNearestGhostPosition(ghostPositions);
+                if (nearestPowerPelletPosition != null && ((nearestGhostPosition.X > Position.X && nearestPowerPelletPosition.X < Position.X) || (nearestGhostPosition.X < Position.X && nearestPowerPelletPosition.X > Position.X)
+                    || (nearestGhostPosition.Y > Position.Y && nearestPowerPelletPosition.Y < Position.Y) || (nearestGhostPosition.Y < Position.Y && nearestPowerPelletPosition.Y > Position.Y)))
+                {
+                    MoveTowardsGoal(nearestPowerPelletPosition);
+                }
+                else
+                {
+                    var target = Position;
+                    if (nearestGhostPosition.X > Position.X)
+                    {
+                        target = new Position(Position.X - 1, Position.Y);
+                    }
+                    else if (nearestGhostPosition.X < Position.X)
+                    {
+                        target = new Position(Position.X + 1, Position.Y);
+                    }
+                    else if (nearestGhostPosition.Y > Position.Y)
+                    {
+                        target = new Position(Position.X, Position.Y - 1);
+                    }
+                    else
+                    {
+                        target = new Position(Position.X, Position.Y + 1);
+                    }
+
+                    if (occupiablePositions.Contains(target))
+                    {
+                        MoveTowardsGoal(target);
+                    }
+                    else
+                    {
+                        MoveTowardsGoal(occupiablePositions.FirstOrDefault(pos => !ghostPositions.Contains(pos)));
+                    }
+                }
+            }
             
             // wenn 2 oder mehr geister sichtbar sind und power pellet in der nähe, dann pp essen
         
             // wenn counter < pelletthreshold, normale pellets essen (closest)
-            MoveTowardsGoal(nextPelletPosiotion);
+            MoveTowardsGoal(nextPelletPosition);
             return; 
             // nähestes powerpellet essen
                 
@@ -72,6 +110,28 @@ public class PacManAgent : MovingAgent
         }
     }
 
+    
+    private List<GhostAgent> ExploreDangerousGhosts()
+    {
+        return Layer.GhostAgentEnvironment.Explore(Position, 3, -1).ToList();
+    }
+    
+    private Position getNearestPowerPelletPosition(List<Position> powerPelletPositions)
+    {
+        if (powerPelletPositions.Count > 0)
+        {
+            Position nearestPowerPelletPosition = powerPelletPositions[0];
+            for (int i = 0; i < powerPelletPositions.Count; i++)
+            {
+                if (GetDistance(nearestPowerPelletPosition) > GetDistance(powerPelletPositions[i]))
+                {
+                    nearestPowerPelletPosition = powerPelletPositions[i];
+                }
+            }
+            return nearestPowerPelletPosition;
+        }
+        return null; 
+    }
     private Position getNearestGhostPosition(List<Position> ghostPositions)
     {
         if (ghostPositions.Count > 0)
