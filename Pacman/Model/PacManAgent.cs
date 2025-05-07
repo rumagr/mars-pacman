@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Mars.Interfaces.Annotations;
 using Mars.Interfaces.Environments;
+using Mars.Numerics;
+using Mars.Numerics.Distances;
 
 namespace Pacman.Model;
 
@@ -20,13 +22,14 @@ public class PacManAgent : MovingAgent
         var powerPelletPositions = ExplorePowerPelletPositions();
         var pelletPositions = ExplorePelletPositions();
         // var ghostPositions = ExploreGhostPositions();
-        var ghostPositions = ExploreGhosts().Select(agent => agent.Position).ToList();
+        var ghostPositions = ExploreGhosts().Where(agent => agent.Mode != GhostMode.Eaten).Select(agent => agent.Position).ToList();
         var occupiablePositions = ExploreOccupiablePositions();
-        var dangerousGhosts = ExploreDangerousGhosts();
+        var dangerousGhosts = ExploreDangerousGhosts().Where(agent => agent.Mode != GhostMode.Eaten).Select(agent => agent.Position).ToList();
         var nextPelletPosition = getNearestPelletPosition(pelletPositions); 
         
         if (PoweredUp)
         {
+            pelletsEaten = 0; 
             var target = getNearestGhostPosition(ghostPositions);
             if (target != null)
             {
@@ -59,7 +62,7 @@ public class PacManAgent : MovingAgent
                 }
                 else
                 {
-                    var target = Position;
+                    Position target = null;
                     if (nearestGhostPosition.X > Position.X)
                     {
                         target = new Position(Position.X - 1, Position.Y);
@@ -83,7 +86,7 @@ public class PacManAgent : MovingAgent
                     }
                     else
                     {
-                        MoveTowardsGoal(occupiablePositions.FirstOrDefault(pos => !ghostPositions.Contains(pos)));
+                        MoveTowardsGoal(occupiablePositions.OrderByDescending(pos => Distance.Euclidean(nearestGhostPosition.X, nearestGhostPosition.Y, pos.X, pos.Y)).First()); //sortiere nach distanz 
                     }
                 }
             }
@@ -95,6 +98,7 @@ public class PacManAgent : MovingAgent
             {
                 
                     MoveTowardsGoal(getNearestPowerPelletPosition(powerPelletPositions)); 
+                
             }
             else // nähestes pellet essen
             {
@@ -162,7 +166,7 @@ public class PacManAgent : MovingAgent
             Position nearestGhostPosition = ghostPositions[0];
             for (int i = 0; i < ghostPositions.Count; i++)
             {
-                if (GetDistance(nearestGhostPosition) > GetDistance(ghostPositions[i]))
+                if (GetDistance(nearestGhostPosition) > GetDistance(ghostPositions[i]) )
                 {
                     nearestGhostPosition = ghostPositions[i];
                 }
