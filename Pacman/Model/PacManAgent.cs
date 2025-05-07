@@ -22,6 +22,8 @@ public class PacManAgent : MovingAgent
         // var ghostPositions = ExploreGhostPositions();
         var ghostPositions = ExploreGhosts().Select(agent => agent.Position).ToList();
         var occupiablePositions = ExploreOccupiablePositions();
+
+        var nextPelletPosiotion = getNearestPelletPosition(pelletPositions); 
         
         if (PoweredUp)
         {
@@ -33,6 +35,8 @@ public class PacManAgent : MovingAgent
             }
             else
             {
+                MoveTowardsGoal(nextPelletPosiotion);
+                return; 
                 //esse pallets 
             }
         } 
@@ -43,7 +47,8 @@ public class PacManAgent : MovingAgent
             // wenn 2 oder mehr geister sichtbar sind und power pellet in der nähe, dann pp essen
         
             // wenn counter < pelletthreshold, normale pellets essen (closest)
-        
+            MoveTowardsGoal(nextPelletPosiotion);
+            return; 
             // nähestes powerpellet essen
                 
         }
@@ -84,6 +89,22 @@ public class PacManAgent : MovingAgent
         return null; 
     }
     
+    private Position getNearestPelletPosition(List<Position> pelletPositions)
+    {
+        if (pelletPositions.Count > 0)
+        {
+            Position nearestPelletPosition = pelletPositions[0];
+            for (int i = 0; i < pelletPositions.Count; i++)
+            {
+                if (GetDistance(nearestPelletPosition) > GetDistance(pelletPositions[i]) && (pelletPositions[i].X == Position.X || pelletPositions[i].Y == Position.Y))
+                {
+                    nearestPelletPosition = pelletPositions[i];
+                }
+            }
+            return nearestPelletPosition;
+        }
+        return null; 
+    }
     /// <summary>
     /// Explores the environment and returns a list of positions of the ghosts.
     /// </summary>
