@@ -54,7 +54,7 @@ public class PacManAgent : MovingAgent
             if (dangerousGhosts.Count > 0) // ansonsten, wenn geist bestimmte distanz unterschreitet: fliehen Richtung Power Pellet, wenn es näher ist als Geist
             {
                 var nearestPowerPelletPosition = getNearestPowerPelletPosition(powerPelletPositions);
-                var nearestGhostPosition = getNearestGhostPosition(ghostPositions);
+                var nearestGhostPosition = getNearestGhostPosition(dangerousGhosts);
                 if (nearestPowerPelletPosition != null && ((nearestGhostPosition.X > Position.X && nearestPowerPelletPosition.X < Position.X) || (nearestGhostPosition.X < Position.X && nearestPowerPelletPosition.X > Position.X)
                     || (nearestGhostPosition.Y > Position.Y && nearestPowerPelletPosition.Y < Position.Y) || (nearestGhostPosition.Y < Position.Y && nearestPowerPelletPosition.Y > Position.Y)))
                 {
@@ -84,9 +84,24 @@ public class PacManAgent : MovingAgent
                     {
                         MoveTowardsGoal(target);
                     }
-                    else
+                    else //bewege in beliebige richtung, die nicht in die Richtung des Geistes ist
                     {
-                        MoveTowardsGoal(occupiablePositions.OrderByDescending(pos => Distance.Euclidean(nearestGhostPosition.X, nearestGhostPosition.Y, pos.X, pos.Y)).First()); //sortiere nach distanz 
+                        var safePositions = occupiablePositions
+                            .Where(pos => !(Math.Sign(pos.X - Position.X) == Math.Sign(nearestGhostPosition.X - Position.X) &&
+                                            Math.Sign(pos.Y - Position.Y) == Math.Sign(nearestGhostPosition.Y - Position.Y)))
+                            .ToList();
+
+                        if (safePositions.Any())
+                        {
+                            var targetPosition = safePositions[_random.Next(0, safePositions.Count)];
+                            MoveTowardsGoal(targetPosition);
+                        }
+                        else
+                        {
+                            // Fallback if no safe positions are found
+                            var randomPosition = occupiablePositions[_random.Next(0, occupiablePositions.Count)];
+                            MoveTowardsGoal(randomPosition);
+                        }
                     }
                 }
             }
