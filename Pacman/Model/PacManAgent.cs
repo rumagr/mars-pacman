@@ -5,6 +5,8 @@ using Mars.Interfaces.Annotations;
 using Mars.Interfaces.Environments;
 using Mars.Numerics;
 using Mars.Numerics.Distances;
+using System.IO;
+using System.Text.Json;
 
 namespace Pacman.Model;
 
@@ -15,9 +17,27 @@ public class PacManAgent : MovingAgent
         Layer = layer;
         Position = new Position(StartX, StartY);
         Layer.PacManAgentEnvironment.Insert(this);
-        for (int i = 0; i < QTable.Length; i++)
+        
+        if (!LoadQTable("QTable.json"))
         {
-            QTable[i] = new int[5];
+            for (int i = 0; i < 2; i++)
+            {
+                QTable[i] = new int[5][][][];
+                for (int j = 0; j < 5; j++)
+                {
+                    QTable[i][j] = new int[5][][];
+                    
+                        for (int k = 0; k < 5; k++)
+                        {
+                            QTable[i][j][k] = new int[5][];
+                            for (int l = 0; l < 5; l++)
+                            {
+                                QTable[i][j][k][l] = new int[4];
+                            }
+                        }
+                    
+                }
+            }
         }
     }
 
@@ -34,61 +54,142 @@ public override void Tick()
         var nearestPowerPelletPosition = getNearestPowerPelletPosition(powerPelletPositions);
         var nearestDangerousGhostPosition = getNearestGhostPosition(dangerousGhosts);
         
-        var state = 0;
-        
-        if (PoweredUp)
-        {
-            
-            if (nearestDangerousGhostPosition != null)
-            {
-                state = powered_up_ghost; 
-            }
-            else
-            {
-                if (nextPelletPosition != null) //esse pallets
-                {
-                    state = powered_up_no_ghost_pellet;
-                }
-                else 
-                {
-                    state = powered_up_no_ghost_no_pellet;
-                }
+        var powered_up = PoweredUp ? 1 : 0;
+        var ghost_direction = getDirection(nearestDangerousGhostPosition);
+        var pellet_direction = getDirection(nextPelletPosition);
+        var power_pellet_direction = getDirection(nearestPowerPelletPosition);
 
-            }
-        } 
-        else
+        var actions = QTable[powered_up][ghost_direction][pellet_direction][power_pellet_direction].ToList();
+        var random_action = _random.Next(0, 4);
+        
+        var sortedActionIndices = actions
+            .Select((value, index) => new { Value = value, Index = index })
+            .OrderByDescending(x => x.Value)
+            .Select(x => x.Index)
+            .ToList();
+
+        var action = sortedActionIndices.First();
+
+        var actionInvalid = true; 
+        do
         {
-            if (dangerousGhosts.Count > 0) // ansonsten, wenn geist bestimmte distanz unterschreitet: fliehen Richtung Power Pellet, wenn es näher ist als Geist
+            if (action == 0)
             {
-                if (nearestPowerPelletPosition != null)
+                actionInvalid = occupiablePositions.Contains(new Position(Position.X, Position.Y + 1)) == false;
+            }
+            else if (action == 1)
+            {
+                actionInvalid = occupiablePositions.Contains(new Position(Position.X, Position.Y - 1)) == false;
+            }
+            else if (action == 2)
+            {
+                actionInvalid = occupiablePositions.Contains(new Position(Position.X - 1, Position.Y)) == false;
+            }
+            else if (action == 3)
+            {
+                actionInvalid = occupiablePositions.Contains(new Position(Position.X + 1, Position.Y)) == false;
+            }
+
+            if (actionInvalid)
+            {
+                sortedActionIndices.RemoveAt(sortedActionIndices.Count - 1);
+                if (sortedActionIndices.Count > 0)
                 {
-                    state = no_powered_up_ghost_powerpellet; 
+                    action = sortedActionIndices.First();
                 }
                 else
                 {
-                    state = no_powered_up_ghost_no_powerpellet;
+                    action = random_action;
                 }
             }
-            else 
-            {
-                if (nextPelletPosition != null) 
-                {
-                    state = no_powered_up_no_ghost_no_pellet;
-                }
-                else 
-                {
-                    state = no_powered_up_no_ghost_no_pellet;
-                }
-            }
+            
+        }while (actionInvalid);
+        
+       
+        
+        if (_random.NextDouble() < explorationRate)
+        {
+            action = random_action;
         }
         
+        if (action == 0)
+        {
+            goUp(occupiablePositions);
+        }
+        else if (action == 1)
+        {
+            goDown(occupiablePositions);
+        }
+        else if (action == 2)
+        {
+            goLeft(occupiablePositions);
+        }
+        else if (action == 3)
+        {
+            goRight(occupiablePositions);
+        }
         
+        //calculate reward 
+        QTable[powered_up][ghost_direction][pellet_direction][power_pellet_direction][action] = calculateReward(); 
         
-        var action = QTable[state].ToList().IndexOf(QTable[state].Max());
-        
-        
+        SaveQTable("QTable.json");
     }
 
+
+
+    private int calculateReward()
+    {
+        int reward = 0;
+        var powerPelletPositions = ExplorePowerPelletPositions();
+        var pelletPositions = ExplorePelletPositions();
+        var dangerousGhosts = ExploreDangerousGhosts().Where(agent => agent.Mode != GhostMode.Eaten).Select(agent => agent.Position).ToList();
+        
+        if (pelletPositions.Contains(Position))
+        {
+            reward += pellet_reward;
+        }
+        
+        if (powerPelletPositions.Contains(Position))
+        {
+            reward += power_pellet_reward;
+        }
+        
+        if (dangerousGhosts.Contains(Position) && !PoweredUp)
+        {
+            reward += ghost_penalty;
+        }
+        else if (dangerousGhosts.Contains(Position) && PoweredUp)
+        {
+            reward += ghost_eaten_reward;
+        }
+        
+        return reward; 
+    }
+
+    private int getDirection(Position other_position)
+    {
+        if (other_position == null)
+        {
+            return no_position;
+        }
+        
+        if (Position.X < other_position.X)
+        {
+            return right;
+        }
+        else if (Position.X > other_position.X)
+        {
+            return left;
+        }
+        else if (Position.Y < other_position.Y)
+        {
+            return up;
+        }
+        else
+        {
+            return down;
+        }
+    }
 
     private void goUp(List<Position> occupiablePositions)
     {
@@ -167,6 +268,25 @@ public override void Tick()
         }
         return null; 
     }
+
+    public void SaveQTable(string filePath)
+    {
+        var options = new JsonSerializerOptions { WriteIndented = true };
+        File.WriteAllText(filePath, JsonSerializer.Serialize(QTable, options));
+    }
+
+    public bool LoadQTable(string filePath)
+    {
+        if (File.Exists(filePath))
+        {
+            QTable = JsonSerializer.Deserialize<int[][][][][]>(File.ReadAllText(filePath));
+            return true;
+        }
+        else
+        {
+            return false; 
+        }
+    }
     
     private Position getNearestPelletPosition(List<Position> pelletPositions)
     {
@@ -215,8 +335,8 @@ public override void Tick()
     [PropertyDescription]
     public int Lives { get; set; }
         
-    //QTable
-    private int[][] QTable = new int[7][];
+    //QTable powered up/not powered up, ghost directions, pellet directions, power pellet directions 
+    private int[][][][][] QTable = new int[2][][][][];
     
     //
     private static double learningRate = 0.1;
@@ -237,19 +357,10 @@ public override void Tick()
     //private static int wall_penalty = -1;
     private static int ghost_penalty = -20;
     
-    //states 
-    private static int powered_up_ghost = 0;
-    private static int powered_up_no_ghost_pellet = 1;
-    private static int powered_up_no_ghost_no_pellet = 2;
-    private static int no_powered_up_ghost_no_powerpellet = 3;
-    private static int no_powered_up_ghost_powerpellet = 4;
-    private static int no_powered_up_no_ghost_pellet = 5;
-    private static int no_powered_up_no_ghost_no_pellet = 6;
-    
-    //actions 
-    private static int eat_pellets = 0;
-    private static int hunt_ghost = 1;
-    private static int eat_power_pellet = 2;
-    private static int run_away = 3;
-    private static int random_walk = 4;
+    //directions
+    private static int no_position = -1; 
+    private static int up = 0;
+    private static int down = 1;
+    private static int left = 2;
+    private static int right = 3;
 }
