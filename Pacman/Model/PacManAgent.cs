@@ -15,9 +15,13 @@ public class PacManAgent : MovingAgent
         Layer = layer;
         Position = new Position(StartX, StartY);
         Layer.PacManAgentEnvironment.Insert(this);
+        for (int i = 0; i < QTable.Length; i++)
+        {
+            QTable[i] = new int[5];
+        }
     }
 
-    public override void Tick()
+public override void Tick()
     {
         var powerPelletPositions = ExplorePowerPelletPositions();
         var pelletPositions = ExplorePelletPositions();
@@ -26,7 +30,7 @@ public class PacManAgent : MovingAgent
         var occupiablePositions = ExploreOccupiablePositions();
         var dangerousGhosts = ExploreDangerousGhosts().Where(agent => agent.Mode != GhostMode.Eaten).Select(agent => agent.Position).ToList();
         var nextPelletPosition = getNearestPelletPosition(pelletPositions); 
-        
+
         if (PoweredUp)
         {
             pelletsEaten = 0; 
@@ -46,7 +50,7 @@ public class PacManAgent : MovingAgent
                     var randomPosition = occupiablePositions[_random.Next(0, occupiablePositions.Count)];
                     MoveTowardsGoal(randomPosition);
                 }
-                 
+
             }
         } 
         else
@@ -111,9 +115,9 @@ public class PacManAgent : MovingAgent
             }
             else if (pelletsEaten >= thresh && (powerPelletPositions.Count > 0)) // wenn counter > pelletthreshold, power pellets essen (closest)
             {
-                
+
                     MoveTowardsGoal(getNearestPowerPelletPosition(powerPelletPositions)); 
-                
+
             }
             else // nähestes pellet essen
             {
@@ -127,29 +131,7 @@ public class PacManAgent : MovingAgent
                     MoveTowardsGoal(randomPosition);
                 }
             }
-            
-        
-
-                
         }
-   
-        
-        
-        
-        // Rule-based behaviour
-        //if (powerPelletPositions.Count > 0) MoveTowardsGoal(powerPelletPositions.First());
-        //else if (pelletPositions.Count > 0) MoveTowardsGoal(pelletPositions.First());
-        //else if (ghostPositions.Count > 0)
-        //{
-        //    var target = ghostPositions.First();
-        //    if (PoweredUp) MoveTowardsGoal(target);
-        //    else MoveTowardsGoal(occupiablePositions.FirstOrDefault(pos => !ghostPositions.Contains(pos)));
-        //}
-        //else
-        //{
-        //    var randomPosition = occupiablePositions[_random.Next(0, occupiablePositions.Count)];
-        //    MoveTowardsGoal(randomPosition);
-        //}
     }
 
     
@@ -237,8 +219,42 @@ public class PacManAgent : MovingAgent
     
     [PropertyDescription]
     public int Lives { get; set; }
+        
+    //QTable
+    private int[][] QTable = new int[7][];
+    
+    //
+    private static double learningRate = 0.1;
+    
+    private static double discountFactor = 0.5;
+
+    private static double explorationRate = 0.2;
     
     private int pelletsEaten = 0;
-
-    private static int thresh = 15; 
+    
+    private static int thresh = 5; 
+    
+    //Rewards and penalties
+    private static int pellet_reward = 1;
+    private static int power_pellet_reward = 5;
+    private static int ghost_eaten_reward = 10;
+    
+    //private static int wall_penalty = -1;
+    private static int ghost_penalty = -20;
+    
+    //states 
+    private static int powered_up_ghost = 0;
+    private static int powered_up_no_ghost_pellet = 1;
+    private static int powered_up_no_ghost_no_pellet = 2;
+    private static int no_powered_up_ghost_no_powerpellet = 3;
+    private static int no_powered_up_ghost_powerpellet = 4;
+    private static int no_powered_up_no_ghost_pellet = 5;
+    private static int no_powered_up_no_ghost_no_pellet = 6;
+    
+    //actions 
+    private static int eat_pellets = 0;
+    private static int hunt_ghost = 1;
+    private static int eat_power_pellet = 2;
+    private static int run_away = 3;
+    private static int random_walk = 4;
 }
