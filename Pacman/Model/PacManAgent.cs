@@ -7,7 +7,7 @@ using Mars.Numerics;
 using Mars.Numerics.Distances;
 using System.IO;
 using System.Text.Json;
-using MongoDB.Driver;
+using Microsoft.VisualBasic.CompilerServices;
 
 namespace Pacman.Model;
 
@@ -97,45 +97,38 @@ public override void Tick()
 
     private int getValidAction(List<int> actions, List<Position> occupiablePostitions)
     {
-        var indicies = new List<int>();
 
-        while (actions.Count > 0)
+        var AvailableActions = new List<int>();
+        
+        if (occupiablePostitions.Contains(new Position(Position.X, Position.Y + 1)))
+        { 
+            AvailableActions.Add(0);
+        }
+        else if (occupiablePostitions.Contains(new Position(Position.X, Position.Y - 1)))
+        { 
+            AvailableActions.Add(1);
+
+        }
+        else if (occupiablePostitions.Contains(new Position(Position.X -1 , Position.Y)))
+        { 
+            AvailableActions.Add(2);
+
+        }
+        else if (occupiablePostitions.Contains(new Position(Position.X+1, Position.Y )))
+        { 
+            AvailableActions.Add(3);
+
+        }
+        
+        for (int i = 0; i < actions.Count; i++)
         {
-            indicies.Add(actions.IndexOf(actions.Max()));
-            actions.Remove(actions.Max());
+            if (!AvailableActions.Contains(i))
+            {
+                actions[i] = int.MinValue;
+            }
         }
 
-        var action = indicies.First();
-        indicies.RemoveAt(0);
-        var positionInvalid = true;
-        do
-        {
-            if (action == 0)
-            {
-                positionInvalid = occupiablePostitions.Contains(new Position(Position.X, Position.Y + 1));
-            }
-            else if (action == 1)
-            {
-                positionInvalid = occupiablePostitions.Contains(new Position(Position.X, Position.Y - 1));
-            }
-            else if (action == 2)
-            {
-                positionInvalid = occupiablePostitions.Contains(new Position(Position.X - 1, Position.Y));
-            }
-            else if (action == 3)
-            {
-                positionInvalid = occupiablePostitions.Contains(new Position(Position.X + 1, Position.Y + 1));
-            }
-
-            if (positionInvalid)
-            {
-                action = indicies.First();
-                indicies.RemoveAt(0);
-            }
-
-        } while (positionInvalid);
-
-        return action; 
+        return actions.IndexOf(actions.Max()); 
     }
 
 
