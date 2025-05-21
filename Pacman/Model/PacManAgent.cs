@@ -134,6 +134,71 @@ public override void Tick()
         }
     }
 
+    private void huntGhost(List<Position> ghostPositions)
+    {
+        var target = getNearestGhostPosition(ghostPositions);
+        if (target != null)
+        {
+            MoveTowardsGoal(target);
+        }
+    }
+    
+    private void runAway(List<Position> ghostPositions)
+    {
+        var target = getNearestGhostPosition(ghostPositions);
+        if (target != null)
+        {
+            Position escapeTarget = null;
+            if (target.X > Position.X)
+            {
+                escapeTarget = new Position(Position.X - 1, Position.Y);
+            }
+            else if (target.X < Position.X)
+            {
+                escapeTarget = new Position(Position.X + 1, Position.Y);
+            }
+            else if (target.Y > Position.Y)
+            {
+                escapeTarget = new Position(Position.X, Position.Y - 1);
+            }
+            else
+            {
+                escapeTarget = new Position(Position.X, Position.Y + 1);
+            }
+
+            MoveTowardsGoal(escapeTarget);
+        }
+    }
+    
+    private void eatPowerPellet(List<Position> powerPelletPositions)
+    {
+        var target = getNearestPowerPelletPosition(powerPelletPositions);
+        if (target != null)
+        {
+            MoveTowardsGoal(target);
+        }
+    }
+
+    private void eatPellet(Position  nextPelletPosition ,List<Position> occupiablePositions)
+    {
+        if (nextPelletPosition != null) //esse pallets
+        {
+            MoveTowardsGoal(nextPelletPosition);
+        }
+        else 
+        {
+            var randomPosition = occupiablePositions[_random.Next(0, occupiablePositions.Count)];
+            MoveTowardsGoal(randomPosition);
+        }
+    }
+    
+    private void randomWalk(List<Position> occupiablePositions)
+    {
+        var randomPosition = occupiablePositions[_random.Next(0, occupiablePositions.Count)];
+        MoveTowardsGoal(randomPosition);
+    }
+    
+
     
     private List<GhostAgent> ExploreDangerousGhosts()
     {
