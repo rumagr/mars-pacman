@@ -7,6 +7,7 @@ using Mars.Numerics;
 using Mars.Numerics.Distances;
 using System.IO;
 using System.Text.Json;
+using MongoDB.Driver;
 
 namespace Pacman.Model;
 
@@ -62,50 +63,9 @@ public override void Tick()
         var actions = QTable[powered_up][ghost_direction][pellet_direction][power_pellet_direction].ToList();
         var random_action = _random.Next(0, 4);
         
-        var sortedActionIndices = actions
-            .Select((value, index) => new { Value = value, Index = index })
-            .OrderByDescending(x => x.Value)
-            .Select(x => x.Index)
-            .ToList();
-
-        var action = sortedActionIndices.First();
-
-        var actionInvalid = true; 
-        do
-        {
-            if (action == 0)
-            {
-                actionInvalid = occupiablePositions.Contains(new Position(Position.X, Position.Y + 1)) == false;
-            }
-            else if (action == 1)
-            {
-                actionInvalid = occupiablePositions.Contains(new Position(Position.X, Position.Y - 1)) == false;
-            }
-            else if (action == 2)
-            {
-                actionInvalid = occupiablePositions.Contains(new Position(Position.X - 1, Position.Y)) == false;
-            }
-            else if (action == 3)
-            {
-                actionInvalid = occupiablePositions.Contains(new Position(Position.X + 1, Position.Y)) == false;
-            }
-
-            if (actionInvalid)
-            {
-                sortedActionIndices.RemoveAt(sortedActionIndices.Count - 1);
-                if (sortedActionIndices.Count > 0)
-                {
-                    action = sortedActionIndices.First();
-                }
-                else
-                {
-                    action = random_action;
-                }
-            }
-            
-        }while (actionInvalid);
+        //todo find valid action
         
-       
+        var action = getValidAction(actions, occupiablePositions);
         
         if (_random.NextDouble() < explorationRate)
         {
@@ -135,6 +95,48 @@ public override void Tick()
         SaveQTable("QTable.json");
     }
 
+    private int getValidAction(List<int> actions, List<Position> occupiablePostitions)
+    {
+        var indicies = new List<int>();
+
+        while (actions.Count > 0)
+        {
+            indicies.Add(actions.IndexOf(actions.Max()));
+            actions.Remove(actions.Max());
+        }
+
+        var action = indicies.First();
+        indicies.RemoveAt(0);
+        var positionInvalid = true;
+        do
+        {
+            if (action == 0)
+            {
+                positionInvalid = occupiablePostitions.Contains(new Position(Position.X, Position.Y + 1));
+            }
+            else if (action == 1)
+            {
+                positionInvalid = occupiablePostitions.Contains(new Position(Position.X, Position.Y - 1));
+            }
+            else if (action == 2)
+            {
+                positionInvalid = occupiablePostitions.Contains(new Position(Position.X - 1, Position.Y));
+            }
+            else if (action == 3)
+            {
+                positionInvalid = occupiablePostitions.Contains(new Position(Position.X + 1, Position.Y + 1));
+            }
+
+            if (positionInvalid)
+            {
+                action = indicies.First();
+                indicies.RemoveAt(0);
+            }
+
+        } while (positionInvalid);
+
+        return action; 
+    }
 
 
     private int calculateReward()
@@ -358,7 +360,7 @@ public override void Tick()
     private static int ghost_penalty = -20;
     
     //directions
-    private static int no_position = -1; 
+    private static int no_position = 4; 
     private static int up = 0;
     private static int down = 1;
     private static int left = 2;
