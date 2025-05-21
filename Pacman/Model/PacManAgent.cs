@@ -30,25 +30,28 @@ public override void Tick()
         var occupiablePositions = ExploreOccupiablePositions();
         var dangerousGhosts = ExploreDangerousGhosts().Where(agent => agent.Mode != GhostMode.Eaten).Select(agent => agent.Position).ToList();
         var nextPelletPosition = getNearestPelletPosition(pelletPositions); 
-
+        var nearestGhostPosition = getNearestGhostPosition(ghostPositions);
+        var nearestPowerPelletPosition = getNearestPowerPelletPosition(powerPelletPositions);
+        var nearestDangerousGhostPosition = getNearestGhostPosition(dangerousGhosts);
+        
+        var state = 0;
+        
         if (PoweredUp)
         {
-            pelletsEaten = 0; 
-            var target = getNearestGhostPosition(ghostPositions);
-            if (target != null)
+            
+            if (nearestDangerousGhostPosition != null)
             {
-                MoveTowardsGoal(target);
+                state = powered_up_ghost; 
             }
             else
             {
                 if (nextPelletPosition != null) //esse pallets
                 {
-                    MoveTowardsGoal(nextPelletPosition);
+                    state = powered_up_no_ghost_pellet;
                 }
                 else 
                 {
-                    var randomPosition = occupiablePositions[_random.Next(0, occupiablePositions.Count)];
-                    MoveTowardsGoal(randomPosition);
+                    state = powered_up_no_ghost_no_pellet;
                 }
 
             }
@@ -57,148 +60,75 @@ public override void Tick()
         {
             if (dangerousGhosts.Count > 0) // ansonsten, wenn geist bestimmte distanz unterschreitet: fliehen Richtung Power Pellet, wenn es näher ist als Geist
             {
-                var nearestPowerPelletPosition = getNearestPowerPelletPosition(powerPelletPositions);
-                var nearestGhostPosition = getNearestGhostPosition(dangerousGhosts);
-                if (nearestPowerPelletPosition != null && ((nearestGhostPosition.X > Position.X && nearestPowerPelletPosition.X < Position.X) || (nearestGhostPosition.X < Position.X && nearestPowerPelletPosition.X > Position.X)
-                    || (nearestGhostPosition.Y > Position.Y && nearestPowerPelletPosition.Y < Position.Y) || (nearestGhostPosition.Y < Position.Y && nearestPowerPelletPosition.Y > Position.Y)))
+                if (nearestPowerPelletPosition != null)
                 {
-                    MoveTowardsGoal(nearestPowerPelletPosition);
+                    state = no_powered_up_ghost_powerpellet; 
                 }
                 else
                 {
-                    Position target = null;
-                    if (nearestGhostPosition.X > Position.X)
-                    {
-                        target = new Position(Position.X - 1, Position.Y);
-                    }
-                    else if (nearestGhostPosition.X < Position.X)
-                    {
-                        target = new Position(Position.X + 1, Position.Y);
-                    }
-                    else if (nearestGhostPosition.Y > Position.Y)
-                    {
-                        target = new Position(Position.X, Position.Y - 1);
-                    }
-                    else
-                    {
-                        target = new Position(Position.X, Position.Y + 1);
-                    }
-
-                    if (occupiablePositions.Contains(target))
-                    {
-                        MoveTowardsGoal(target);
-                    }
-                    else //bewege in beliebige richtung, die nicht in die Richtung des Geistes ist
-                    {
-                        var safePositions = occupiablePositions
-                            .Where(pos => !(Math.Sign(pos.X - Position.X) == Math.Sign(nearestGhostPosition.X - Position.X) &&
-                                            Math.Sign(pos.Y - Position.Y) == Math.Sign(nearestGhostPosition.Y - Position.Y)))
-                            .ToList();
-
-                        if (safePositions.Any())
-                        {
-                            var targetPosition = safePositions[_random.Next(0, safePositions.Count)];
-                            MoveTowardsGoal(targetPosition);
-                        }
-                        else
-                        {
-                            // Fallback if no safe positions are found
-                            var randomPosition = occupiablePositions[_random.Next(0, occupiablePositions.Count)];
-                            MoveTowardsGoal(randomPosition);
-                        }
-                    }
+                    state = no_powered_up_ghost_no_powerpellet;
                 }
             }
-            else if (ghostPositions.Count >= 2 && powerPelletPositions.Count > 0) // wenn 2 oder mehr geister sichtbar sind und power pellet in der nähe, dann pp essen
+            else 
             {
-                MoveTowardsGoal(getNearestPowerPelletPosition(powerPelletPositions)); 
-            }
-            else if (pelletsEaten >= thresh && (powerPelletPositions.Count > 0)) // wenn counter > pelletthreshold, power pellets essen (closest)
-            {
-
-                    MoveTowardsGoal(getNearestPowerPelletPosition(powerPelletPositions)); 
-
-            }
-            else // nähestes pellet essen
-            {
-                if (nextPelletPosition != null) //esse pallets
+                if (nextPelletPosition != null) 
                 {
-                    MoveTowardsGoal(nextPelletPosition);
+                    state = no_powered_up_no_ghost_no_pellet;
                 }
                 else 
                 {
-                    var randomPosition = occupiablePositions[_random.Next(0, occupiablePositions.Count)];
-                    MoveTowardsGoal(randomPosition);
+                    state = no_powered_up_no_ghost_no_pellet;
                 }
             }
         }
+        
+        
+        
+        var action = QTable[state].ToList().IndexOf(QTable[state].Max());
+        
+        
     }
 
-    private void huntGhost(List<Position> ghostPositions)
-    {
-        var target = getNearestGhostPosition(ghostPositions);
-        if (target != null)
-        {
-            MoveTowardsGoal(target);
-        }
-    }
-    
-    private void runAway(List<Position> ghostPositions)
-    {
-        var target = getNearestGhostPosition(ghostPositions);
-        if (target != null)
-        {
-            Position escapeTarget = null;
-            if (target.X > Position.X)
-            {
-                escapeTarget = new Position(Position.X - 1, Position.Y);
-            }
-            else if (target.X < Position.X)
-            {
-                escapeTarget = new Position(Position.X + 1, Position.Y);
-            }
-            else if (target.Y > Position.Y)
-            {
-                escapeTarget = new Position(Position.X, Position.Y - 1);
-            }
-            else
-            {
-                escapeTarget = new Position(Position.X, Position.Y + 1);
-            }
 
-            MoveTowardsGoal(escapeTarget);
-        }
-    }
-    
-    private void eatPowerPellet(List<Position> powerPelletPositions)
+    private void goUp(List<Position> occupiablePositions)
     {
-        var target = getNearestPowerPelletPosition(powerPelletPositions);
-        if (target != null)
+        Position = new Position(Position.X, Position.Y+1);
+
+        if (occupiablePositions.Contains(Position))
         {
-            MoveTowardsGoal(target);
+            MoveTowardsGoal(Position);
         }
     }
 
-    private void eatPellet(Position  nextPelletPosition ,List<Position> occupiablePositions)
+    private void goDown(List<Position> occupiablePositions)
     {
-        if (nextPelletPosition != null) //esse pallets
-        {
-            MoveTowardsGoal(nextPelletPosition);
-        }
-        else 
-        {
-            var randomPosition = occupiablePositions[_random.Next(0, occupiablePositions.Count)];
-            MoveTowardsGoal(randomPosition);
-        }
-    }
-    
-    private void randomWalk(List<Position> occupiablePositions)
-    {
-        var randomPosition = occupiablePositions[_random.Next(0, occupiablePositions.Count)];
-        MoveTowardsGoal(randomPosition);
-    }
-    
+        Position = new Position(Position.X , Position.Y-1);
 
+        if (occupiablePositions.Contains(Position))
+        {
+            MoveTowardsGoal(Position);
+        }
+    }
+    
+    private void goRight(List<Position> occupiablePositions)
+    {
+        Position = new Position(Position.X + 1, Position.Y);
+
+        if (occupiablePositions.Contains(Position))
+        {
+            MoveTowardsGoal(Position);
+        }
+    }
+    
+    private void goLeft(List<Position> occupiablePositions)
+    {
+        Position = new Position(Position.X - 1, Position.Y);
+
+        if (occupiablePositions.Contains(Position))
+        {
+            MoveTowardsGoal(Position);
+        }
+    }
     
     private List<GhostAgent> ExploreDangerousGhosts()
     {
