@@ -24,14 +24,18 @@ internal static class Program
         var file = File.ReadAllText("config.json");
         var config = SimulationConfig.Deserialize(file);
 
-        // Couple model description and simulation configuration
-        var starter = SimulationStarter.Start(description, config);
+        for(int i = 0; i < 100; ++i)
+        {
+            // Couple model description and simulation configuration
+            var starter = SimulationStarter.Start(description, config);
 
-        // Run the simulation
-        var handle = starter.Run();
+            // Run the simulation
+            var handle = starter.Run();
         
-        // Close the program
-        Console.WriteLine("Successfully executed iterations: " + handle.Iterations);
-        starter.Dispose();
+            // Close the program
+            Console.WriteLine("Successfully executed iterations: " + handle.Iterations);
+            starter.Dispose();
+        }
+
     }
 }

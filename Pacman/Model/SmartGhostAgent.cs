@@ -44,47 +44,56 @@ public class SmartGhostAgent : GhostAgent
         {
             action = randomAction;
         }
- 
+
+        var newMode = GhostMode.Chase; 
+        
         switch (action)
         {
             case up_chase:
                 goUp(occupiablePositions);
-                Mode = GhostMode.Chase; 
+                newMode = GhostMode.Chase; 
                 break;
             case down_chase:
                 goDown(occupiablePositions);
-                Mode = GhostMode.Chase;
+                newMode = GhostMode.Chase;
                 break;
             case left_chase:
                 goLeft(occupiablePositions);
-                Mode = GhostMode.Chase;
+                newMode = GhostMode.Chase;
                 break;
             case right_chase:
                 goRight(occupiablePositions);
-                Mode = GhostMode.Chase;
+                newMode = GhostMode.Chase;
                 break;
             case up_scatter:
                 goUp(occupiablePositions);
-                Mode = GhostMode.Scatter; 
+                newMode = GhostMode.Scatter; 
                 break;
             case down_scatter:
                 goDown(occupiablePositions);
-                Mode = GhostMode.Scatter; 
+                newMode = GhostMode.Scatter; 
                 break;
             case left_scatter:
                 goLeft(occupiablePositions);
-                Mode = GhostMode.Scatter;
+                newMode = GhostMode.Scatter;
                 break;
             case right_scatter:
                 goRight(occupiablePositions);
-                Mode = GhostMode.Scatter;
+                newMode = GhostMode.Scatter;
                 break;
         }
+        
+        if (Mode != GhostMode.Frightened && Mode != GhostMode.Eaten)
+        { 
+            Mode = newMode;
+        }
 
-        //todo calculate qValue 
+        
+        var qValue = QTable[ghost1Mode][ghost2Mode][ghost3Mode][pacmanFound][pacmanPoweredUp][pacmanDirection][action] 
+            + learningRate * (calculateReward(pacMan, pacmanPoweredUp, pacmanFound) + discountFactor * QTable[ghost1Mode][ghost2Mode][ghost3Mode][pacmanFound][pacmanPoweredUp][pacmanDirection][action] - QTable[ghost1Mode][ghost2Mode][ghost3Mode][pacmanFound][pacmanPoweredUp][pacmanDirection][action]);;
 
-        QTable[ghost1Mode][ghost2Mode][ghost3Mode][pacmanFound][pacmanPoweredUp][pacmanDirection][action] =
-            calculateReward(pacMan, pacmanPoweredUp, pacmanFound);
+        QTable[ghost1Mode][ghost2Mode][ghost3Mode][pacmanFound][pacmanPoweredUp][pacmanDirection][action] = (int) qValue; 
+           
         SaveQTable("../../../Model/QTable_" + Name + ".json");
     }
 
@@ -373,7 +382,7 @@ public class SmartGhostAgent : GhostAgent
     
     private const double discountFactor = 0.5;
 
-    private const double explorationRate = 0.2;
+    private const double explorationRate = 0.8;
     
     //Rewards and penalties 
     private const int pacman_eaten = 10;
