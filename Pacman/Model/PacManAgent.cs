@@ -19,7 +19,7 @@ public class PacManAgent : MovingAgent
         Position = new Position(StartX, StartY);
         Layer.PacManAgentEnvironment.Insert(this);
         
-        if (!LoadQTable("QTable.json"))
+        if (!LoadQTable("../../../Model/QTable.json"))
         {
             for (int i = 0; i < 2; i++)
             {
@@ -28,14 +28,14 @@ public class PacManAgent : MovingAgent
                 {
                     QTable[i][j] = new int[5][][];
                     
-                        for (int k = 0; k < 5; k++)
+                    for (int k = 0; k < 5; k++)
+                    {
+                        QTable[i][j][k] = new int[5][];
+                        for (int l = 0; l < 5; l++)
                         {
-                            QTable[i][j][k] = new int[5][];
-                            for (int l = 0; l < 5; l++)
-                            {
-                                QTable[i][j][k][l] = new int[4];
-                            }
+                            QTable[i][j][k][l] = new int[4];
                         }
+                    }
                     
                 }
             }
@@ -63,8 +63,6 @@ public override void Tick()
         var actions = QTable[powered_up][ghost_direction][pellet_direction][power_pellet_direction].ToList();
         var random_action = _random.Next(0, 4);
         
-        //todo find valid action
-        
         var action = getValidAction(actions, occupiablePositions);
         
         if (_random.NextDouble() < explorationRate)
@@ -89,10 +87,11 @@ public override void Tick()
             goRight(occupiablePositions);
         }
         
+        //todo calculate qValue 
         //calculate reward 
         QTable[powered_up][ghost_direction][pellet_direction][power_pellet_direction][action] = calculateReward(); 
         
-        SaveQTable("QTable.json");
+        SaveQTable("../../../Model/QTable.json");
     }
 
     private int getValidAction(List<int> actions, List<Position> occupiablePostitions)
@@ -184,45 +183,46 @@ public override void Tick()
         {
             return down;
         }
+        
     }
 
     private void goUp(List<Position> occupiablePositions)
     {
-        Position = new Position(Position.X, Position.Y+1);
+        var newPosition = new Position(Position.X, Position.Y+1);
 
-        if (occupiablePositions.Contains(Position))
+        if (occupiablePositions.Contains(newPosition))
         {
-            MoveTowardsGoal(Position);
+            MoveTowardsGoal(newPosition);
         }
     }
 
     private void goDown(List<Position> occupiablePositions)
     {
-        Position = new Position(Position.X , Position.Y-1);
+        var newPosition = new Position(Position.X , Position.Y-1);
 
-        if (occupiablePositions.Contains(Position))
+        if (occupiablePositions.Contains(newPosition))
         {
-            MoveTowardsGoal(Position);
+            MoveTowardsGoal(newPosition);
         }
     }
     
     private void goRight(List<Position> occupiablePositions)
     {
-        Position = new Position(Position.X + 1, Position.Y);
+        var newPosition = new Position(Position.X + 1, Position.Y);
 
-        if (occupiablePositions.Contains(Position))
+        if (occupiablePositions.Contains(newPosition))
         {
-            MoveTowardsGoal(Position);
+            MoveTowardsGoal(newPosition);
         }
     }
     
     private void goLeft(List<Position> occupiablePositions)
     {
-        Position = new Position(Position.X - 1, Position.Y);
+        var newPosition = new Position(Position.X - 1, Position.Y);
 
-        if (occupiablePositions.Contains(Position))
+        if (occupiablePositions.Contains(newPosition))
         {
-            MoveTowardsGoal(Position);
+            MoveTowardsGoal(newPosition);
         }
     }
     
