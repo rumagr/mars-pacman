@@ -26,14 +26,18 @@ public class SmartGhostAgent : GhostAgent
         
         var pacmanFound = pacMan != null ? 1 : 0;
         var pacmanPoweredUp = (pacMan != null && pacMan.PoweredUp) ? 1 : 0;
-        var pacmanDirection = getDirection(pacMan.Position); 
+        var pacmanDirection = 0;
+        if (pacMan != null)
+        {
+            pacmanDirection = getDirection(pacMan.Position); 
+        }
         var ghost1Mode = mode2int(teammates[0].Mode);
         var ghost2Mode = mode2int(teammates[1].Mode);
         var ghost3Mode = mode2int(teammates[2].Mode);
 
-        var actions = QTable[ghost1Mode][ghost2Mode][ghost3Mode][pacmanFound][pacmanPoweredUp][pacmanDirection];
+        var actions = QTable[ghost1Mode][ghost2Mode][ghost3Mode][pacmanFound][pacmanPoweredUp][pacmanDirection].ToList();
 
-        var action = getValidAction(actions); 
+        var action = getValidAction(actions, occupiablePositions); 
         var randomAction = new Random().Next(0,8); 
         
         if (_random.NextDouble() < explorationRate)
@@ -45,45 +49,52 @@ public class SmartGhostAgent : GhostAgent
         {
             case up_chase:
                 goUp(occupiablePositions);
+                Mode = GhostMode.Chase; 
                 break;
             case down_chase:
                 goDown(occupiablePositions);
+                Mode = GhostMode.Chase;
                 break;
             case left_chase:
                 goLeft(occupiablePositions);
+                Mode = GhostMode.Chase;
                 break;
             case right_chase:
                 goRight(occupiablePositions);
+                Mode = GhostMode.Chase;
                 break;
             case up_scatter:
                 goUp(occupiablePositions);
+                Mode = GhostMode.Scatter; 
                 break;
             case down_scatter:
                 goDown(occupiablePositions);
+                Mode = GhostMode.Scatter; 
                 break;
             case left_scatter:
                 goLeft(occupiablePositions);
+                Mode = GhostMode.Scatter;
                 break;
             case right_scatter:
                 goRight(occupiablePositions);
+                Mode = GhostMode.Scatter;
                 break;
         }
 
         //todo calculate qValue 
 
         QTable[ghost1Mode][ghost2Mode][ghost3Mode][pacmanFound][pacmanPoweredUp][pacmanDirection][action] =
-            calculateReward(pacMan, pacmanPoweredUp); 
-        
+            calculateReward(pacMan, pacmanPoweredUp, pacmanFound);
         SaveQTable("../../../Model/QTable_" + Name + ".json");
     }
 
-    private int calculateReward(PacManAgent pacMan,int pacmanPoweredUp)
+    private int calculateReward(PacManAgent pacMan,int pacmanPoweredUp, int pacmanFound)
     {
-        if (pacmanPoweredUp!=0 && Position.Equals(pacMan.Position))
+        if (pacmanFound==1 && pacmanPoweredUp!=0 && Position.Equals(pacMan.Position))
         {
             return eaten_by_pacman; 
         }
-        else if (pacMan.PoweredUp && Position.Equals(pacMan.Position))
+        else if (pacmanFound==1 && Position.Equals(pacMan.Position) && pacMan.PoweredUp)
         {
             return eaten_by_pacman;
         }
@@ -93,10 +104,40 @@ public class SmartGhostAgent : GhostAgent
         }
     }
     
-    private int getValidAction(int[] actions)
+    private int getValidAction(List<int> actions, List<Position> occupiablePositions)
     {
-        //todo find valid action 
-        return -1; 
+        var AvailableActions = new List<int>();
+        
+        if (occupiablePositions.Contains(new Position(Position.X, Position.Y + 1)))
+        { 
+            AvailableActions.Add(up_chase);
+            AvailableActions.Add(up_scatter);
+        }
+        else if (occupiablePositions.Contains(new Position(Position.X, Position.Y - 1)))
+        { 
+            AvailableActions.Add(down_chase);
+            AvailableActions.Add(down_scatter);
+        }
+        else if (occupiablePositions.Contains(new Position(Position.X -1 , Position.Y)))
+        { 
+            AvailableActions.Add(left_chase);
+            AvailableActions.Add(left_scatter);
+        }
+        else if (occupiablePositions.Contains(new Position(Position.X+1, Position.Y )))
+        { 
+            AvailableActions.Add(right_chase);
+            AvailableActions.Add(right_scatter);
+        }
+        
+        for (int i = 0; i < actions.Count; i++)
+        {
+            if (!AvailableActions.Contains(i))
+            {
+                actions[i] = int.MinValue;
+            }
+        }
+
+        return actions.IndexOf(actions.Max()); 
     }
 
     private int mode2int(GhostMode mode)
@@ -140,8 +181,8 @@ public class SmartGhostAgent : GhostAgent
                                     QTable[i][j][k][l][m] = new int[5][];
                                     for (int o = 0; o < 4; o++)
                                     {
-                                        QTable[i][j][k][l][m][o] = new int[4];
-                                        for (int f = 0; f < 4; f++)
+                                        QTable[i][j][k][l][m][o] = new int[8];
+                                        for (int f = 0; f < 8; f++)
                                         {
                                             QTable[i][j][k][l][m][o][f] = 0;
                                         }
