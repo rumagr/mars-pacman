@@ -92,7 +92,10 @@ public class SmartGhostAgent : GhostAgent
         var qValue = QTable[ghost1Mode][ghost2Mode][ghost3Mode][pacmanFound][pacmanPoweredUp][pacmanDirection][action] 
             + learningRate * (calculateReward(pacMan) + discountFactor * QTable[ghost1Mode][ghost2Mode][ghost3Mode][pacmanFound][pacmanPoweredUp][pacmanDirection][action] - QTable[ghost1Mode][ghost2Mode][ghost3Mode][pacmanFound][pacmanPoweredUp][pacmanDirection][action]);;
 
-        QTable[ghost1Mode][ghost2Mode][ghost3Mode][pacmanFound][pacmanPoweredUp][pacmanDirection][action] = qValue; 
+        if (qValue < 100000 && qValue > -100000)
+        {
+            QTable[ghost1Mode][ghost2Mode][ghost3Mode][pacmanFound][pacmanPoweredUp][pacmanDirection][action] = qValue; 
+        }
            
         SaveQTable("../../../Model/QTable_" + Name + ".json");
     }

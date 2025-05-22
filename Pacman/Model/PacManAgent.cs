@@ -89,9 +89,12 @@ public override void Tick()
         
         //calculate reward 
         var qValue = QTable[powered_up][ghost_direction][pellet_direction][power_pellet_direction][action] + learningRate * (calculateReward() + discountFactor * QTable[powered_up][ghost_direction][pellet_direction][power_pellet_direction][action]);
-        
-        QTable[powered_up][ghost_direction][pellet_direction][power_pellet_direction][action] = qValue; 
-        
+
+        if (qValue < 100000 && qValue > -100000)
+        {
+            QTable[powered_up][ghost_direction][pellet_direction][power_pellet_direction][action] = qValue;
+        }
+
         SaveQTable("../../../Model/QTable.json");
     }
 
