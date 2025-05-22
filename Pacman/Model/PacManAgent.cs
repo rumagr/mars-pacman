@@ -23,17 +23,17 @@ public class PacManAgent : MovingAgent
         {
             for (int i = 0; i < 2; i++)
             {
-                QTable[i] = new int[5][][][];
+                QTable[i] = new double[5][][][];
                 for (int j = 0; j < 5; j++)
                 {
-                    QTable[i][j] = new int[5][][];
+                    QTable[i][j] = new double[5][][];
                     
                     for (int k = 0; k < 5; k++)
                     {
-                        QTable[i][j][k] = new int[5][];
+                        QTable[i][j][k] = new double[5][];
                         for (int l = 0; l < 5; l++)
                         {
-                            QTable[i][j][k][l] = new int[4];
+                            QTable[i][j][k][l] = new double[4];
                         }
                     }
                     
@@ -91,12 +91,12 @@ public override void Tick()
         //calculate reward 
         var qValue = QTable[powered_up][ghost_direction][pellet_direction][power_pellet_direction][action] + learningRate * (calculateReward() + discountFactor * QTable[powered_up][ghost_direction][pellet_direction][power_pellet_direction][action]);
         
-        QTable[powered_up][ghost_direction][pellet_direction][power_pellet_direction][action] = (int) qValue; 
+        QTable[powered_up][ghost_direction][pellet_direction][power_pellet_direction][action] = qValue; 
         
         SaveQTable("../../../Model/QTable.json");
     }
 
-    private int getValidAction(List<int> actions, List<Position> occupiablePostitions)
+    private int getValidAction(List<double> actions, List<Position> occupiablePostitions)
     {
 
         var AvailableActions = new List<int>();
@@ -276,7 +276,7 @@ public override void Tick()
     {
         if (File.Exists(filePath))
         {
-            QTable = JsonSerializer.Deserialize<int[][][][][]>(File.ReadAllText(filePath));
+            QTable = JsonSerializer.Deserialize<double[][][][][]>(File.ReadAllText(filePath));
             return true;
         }
         else
@@ -333,7 +333,7 @@ public override void Tick()
     public int Lives { get; set; }
         
     //QTable powered up/not powered up, ghost directions, pellet directions, power pellet directions 
-    private int[][][][][] QTable = new int[2][][][][];
+    private double[][][][][] QTable = new double[2][][][][];
     
     //
     private static double learningRate = 0.1;

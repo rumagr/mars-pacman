@@ -92,7 +92,7 @@ public class SmartGhostAgent : GhostAgent
         var qValue = QTable[ghost1Mode][ghost2Mode][ghost3Mode][pacmanFound][pacmanPoweredUp][pacmanDirection][action] 
             + learningRate * (calculateReward(pacMan, pacmanPoweredUp, pacmanFound) + discountFactor * QTable[ghost1Mode][ghost2Mode][ghost3Mode][pacmanFound][pacmanPoweredUp][pacmanDirection][action] - QTable[ghost1Mode][ghost2Mode][ghost3Mode][pacmanFound][pacmanPoweredUp][pacmanDirection][action]);;
 
-        QTable[ghost1Mode][ghost2Mode][ghost3Mode][pacmanFound][pacmanPoweredUp][pacmanDirection][action] = (int) qValue; 
+        QTable[ghost1Mode][ghost2Mode][ghost3Mode][pacmanFound][pacmanPoweredUp][pacmanDirection][action] = qValue; 
            
         SaveQTable("../../../Model/QTable_" + Name + ".json");
     }
@@ -113,7 +113,7 @@ public class SmartGhostAgent : GhostAgent
         }
     }
     
-    private int getValidAction(List<int> actions, List<Position> occupiablePositions)
+    private int getValidAction(List<double> actions, List<Position> occupiablePositions)
     {
         var AvailableActions = new List<int>();
         
@@ -174,23 +174,23 @@ public class SmartGhostAgent : GhostAgent
         {
             for (int i = 0; i < 4; i++)
             {
-                QTable[i] = new int[4][][][][][];
+                QTable[i] = new double[4][][][][][];
                 for (int j = 0; j < 4; j++)
                 {
-                    QTable[i][j] = new int[4][][][][];
+                    QTable[i][j] = new double[4][][][][];
                     
                     for (int k = 0; k < 4; k++)
                     {
-                        QTable[i][j][k] = new int[2][][][];
+                        QTable[i][j][k] = new double[2][][][];
                         for (int l = 0; l < 2; l++)
                         {
-                            QTable[i][j][k][l] = new int[2][][];
+                            QTable[i][j][k][l] = new double[2][][];
                             for (int m = 0; m < 2; m++)
                             {
-                                    QTable[i][j][k][l][m] = new int[5][];
+                                    QTable[i][j][k][l][m] = new double[5][];
                                     for (int o = 0; o < 4; o++)
                                     {
-                                        QTable[i][j][k][l][m][o] = new int[8];
+                                        QTable[i][j][k][l][m][o] = new double[8];
                                         for (int f = 0; f < 8; f++)
                                         {
                                             QTable[i][j][k][l][m][o][f] = 0;
@@ -287,7 +287,7 @@ public class SmartGhostAgent : GhostAgent
     {
         if (File.Exists(filePath))
         {
-            QTable = JsonSerializer.Deserialize<int[][][][][][][]>(File.ReadAllText(filePath));
+            QTable = JsonSerializer.Deserialize<double[][][][][][][]>(File.ReadAllText(filePath));
             return true;
         }
         else
@@ -375,7 +375,7 @@ public class SmartGhostAgent : GhostAgent
     private const int right = 3;
     
     //QTable Ghost1,2,3 frightened/chase/scatter/eaten, pacman_found/pacman_not_found, pacman powered_up/not_powered_up, pacman direction
-    private int[][][][][][][] QTable = new int[4][][][][][][];
+    private double[][][][][][][] QTable = new double[4][][][][][][];
 
     //QLearning parameters 
     private const double learningRate = 0.1;
