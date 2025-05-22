@@ -87,7 +87,6 @@ public override void Tick()
             goRight(occupiablePositions);
         }
         
-        //todo calculate qValue
         //calculate reward 
         var qValue = QTable[powered_up][ghost_direction][pellet_direction][power_pellet_direction][action] + learningRate * (calculateReward() + discountFactor * QTable[powered_up][ghost_direction][pellet_direction][power_pellet_direction][action]);
         

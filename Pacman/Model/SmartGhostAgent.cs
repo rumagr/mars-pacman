@@ -90,20 +90,25 @@ public class SmartGhostAgent : GhostAgent
 
         
         var qValue = QTable[ghost1Mode][ghost2Mode][ghost3Mode][pacmanFound][pacmanPoweredUp][pacmanDirection][action] 
-            + learningRate * (calculateReward(pacMan, pacmanPoweredUp, pacmanFound) + discountFactor * QTable[ghost1Mode][ghost2Mode][ghost3Mode][pacmanFound][pacmanPoweredUp][pacmanDirection][action] - QTable[ghost1Mode][ghost2Mode][ghost3Mode][pacmanFound][pacmanPoweredUp][pacmanDirection][action]);;
+            + learningRate * (calculateReward(pacMan) + discountFactor * QTable[ghost1Mode][ghost2Mode][ghost3Mode][pacmanFound][pacmanPoweredUp][pacmanDirection][action] - QTable[ghost1Mode][ghost2Mode][ghost3Mode][pacmanFound][pacmanPoweredUp][pacmanDirection][action]);;
 
         QTable[ghost1Mode][ghost2Mode][ghost3Mode][pacmanFound][pacmanPoweredUp][pacmanDirection][action] = qValue; 
            
         SaveQTable("../../../Model/QTable_" + Name + ".json");
     }
 
-    private int calculateReward(PacManAgent pacMan,int pacmanPoweredUp, int pacmanFound)
+    private int calculateReward(PacManAgent pacMan)
     {
-        if (pacmanFound==1 && pacmanPoweredUp!=0 && Position.Equals(pacMan.Position))
+        if (pacMan == null)
         {
-            return eaten_by_pacman; 
+            return 0; 
         }
-        else if (pacmanFound==1 && Position.Equals(pacMan.Position) && pacMan.PoweredUp)
+        
+        if (Position.Equals(pacMan.Position) && !pacMan.PoweredUp)
+        {
+            return pacman_eaten; 
+        }
+        else if (Position.Equals(pacMan.Position) && pacMan.PoweredUp)
         {
             return eaten_by_pacman;
         }
@@ -188,13 +193,9 @@ public class SmartGhostAgent : GhostAgent
                             for (int m = 0; m < 2; m++)
                             {
                                     QTable[i][j][k][l][m] = new double[5][];
-                                    for (int o = 0; o < 4; o++)
+                                    for (int o = 0; o < 5; o++)
                                     {
                                         QTable[i][j][k][l][m][o] = new double[8];
-                                        for (int f = 0; f < 8; f++)
-                                        {
-                                            QTable[i][j][k][l][m][o][f] = 0;
-                                        }
                                     }
                             }
                         }
@@ -385,8 +386,8 @@ public class SmartGhostAgent : GhostAgent
     private const double explorationRate = 0.8;
     
     //Rewards and penalties 
-    private const int pacman_eaten = 10;
-    private const int eaten_by_pacman = -10;
+    private const int pacman_eaten = 100;
+    private const int eaten_by_pacman = -100;
     
     //modes
     private const int up_chase = 0;
